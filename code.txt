@@ -1,0 +1,51 @@
+CODE:
+#include <WiFi.h>                                                    // esp8266 library
+#include <IOXhop_FirebaseESP32.h>                // firebase library
+#include <DHT.h>               // dht11 temperature and humidity sensor library
+
+#define FIREBASE_HOST "testxxxxxxxxxxxxxx.com"    // the project name address from firebase id
+#define FIREBASE_AUTH "11xxxxxxxxxxxxxxxxxxxxxxxxxo"            // the secret key generated from firebase
+
+#define WIFI_SSID "xxxxxxx"                                             // input your home or public wifi name 
+#define WIFI_PASSWORD "xxxxxxxx"                                    //password of wifi ssid
+# define sensorPin 36  
+#define DHTPIN 27 //dth11 out pin    
+#define DHTTYPE DHT22    //type of dht sensor
+DHT dht(DHTPIN, DHTTYPE);
+ void setup() {
+  Serial.begin(115200);
+  delay(1000);                
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);                                     //try to connect with wifi
+  Serial.print("Connecting to ");
+  Serial.print(WIFI_SSID);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println();
+  Serial.print("Connected to ");
+  Serial.println(WIFI_SSID);
+  Serial.print("IP Address is : ");
+  Serial.println(WiFi.localIP());                                            //print local IP address
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);                              // connect to firebase
+  dht.begin();                                                               //Start reading dht sensor
+}
+void loop()
+{
+  float h = dht.readHumidity();//humidity measurement
+ Serial.print("Humidity: ");  Serial.print(h);
+  String fireHumid = String(h) + String("%");      //convert integer humidity to string humidity 
+   float t = dht.readTemperature();//temperature measurement
+  Serial.print("%  Temperature: ");  Serial.print(t);  Serial.println("Â°C ");
+  String fireTemp = String(t) + String("Â°C");                                                     //convert integer temperature to string temperature
+  delay(2000);  
+  int mois = analogRead(sensorPin);
+  String fireMoisture= String(mois);
+Serial.print("Moisture Sensor Value:");
+
+Serial.println(analogRead(sensorPin)); // read the value from the sensor
+delay(1000);
+Firebase.pushString("/DHT11/Humidity",fireHumid);                                  //setup path and send readings
+  Firebase.pushString("/DHT11/Temperature", fireTemp);                                //setup path and send readings
+  Firebase.pushString("/Moisture",fireMoisture);  
+}
